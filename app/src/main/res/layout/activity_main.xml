@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="متن پیامک پیش‌فرض (از {name} برای متغیر نام استفاده کنید):"
+        android:text="متن پیام پیش‌فرض (از {name} برای متغیر نام استفاده کنید):"
         android:textStyle="bold"
         android:textSize="14sp" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:minLines="3"
         android:gravity="top|right"
-        android:hint="مثال: سلام {name} عزیز، کاتالوگ محصولات برای شما ارسال شد."
+        android:hint="مثال: سلام {name} عزیز، کاتالوگ محصولات ارسال شد."
         android:background="@android:drawable/edit_text"
         android:layout_marginTop="6dp" />
 
@@ -39,7 +39,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="انتخاب سیم‌کارت ارسال‌کننده:"
+        android:text="انتخاب سیم‌کارت ارسال‌کننده پیامک:"
         android:textStyle="bold"
         android:textSize="14sp" />
 
@@ -73,12 +73,29 @@
         android:hint="شماره موبایل (مثال: 09123456789)"
         android:layout_marginTop="8dp" />
 
-    <Button
-        android:id="@+id/btnNextStep"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="مرحله بعد (ورود نام و ارسال پیامک)"
-        android:layout_marginTop="6dp" />
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+        <Button
+            android:id="@+id/btnSendSms"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ارسال پیامک و ذخیره"
+            android:layout_marginRight="4dp" />
+
+        <Button
+            android:id="@+id/btnSendWhatsApp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ارسال واتساپ و ذخیره"
+            android:layout_marginLeft="4dp"
+            android:backgroundTint="#25D366" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
