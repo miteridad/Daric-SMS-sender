@@ -66,14 +66,12 @@ class MainActivity : AppCompatActivity() {
         lvContacts.adapter = adapter
         loadContactsFromDb()
 
-        // دکمه کلیک برای ارسال پیامک
         btnSendSmsMain.setOnClickListener {
             validateAndProceed { phone, template ->
                 showStepTwoDialog(phone, template, isWhatsApp = false)
             }
         }
 
-        // دکمه کلیک برای ارسال واتساپ
         btnSendWaMain.setOnClickListener {
             validateAndProceed { phone, template ->
                 showStepTwoDialog(phone, template, isWhatsApp = true)
@@ -156,7 +154,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendViaWhatsApp(phone: String, message: String) {
         try {
-            // اصلاح شماره برای واتساپ (تبدیل 09 به کد بین‌المللی 98+)
             var formattedPhone = phone
             if (formattedPhone.startsWith("0")) {
                 formattedPhone = "+98" + formattedPhone.substring(1)
@@ -164,7 +161,7 @@ class MainActivity : AppCompatActivity() {
 
             val encodedMessage = URLEncoder.encode(message, "UTF-8")
             val url = "https://api.whatsapp.com/send?phone=$formattedPhone&text=$encodedMessage"
-            
+
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse(url)
             }
@@ -299,35 +296,6 @@ class ContactDbHelper(context: Context) : SQLiteOpenHelper(context, "SmsCrm.db",
         if (cursor.moveToFirst()) {
             do {
                 val name = cursor.getString(0)
-                val company = cursor.getString(1).ifEmpty { "بدون شرکت" }
-                val phone = cursor.getString(2)
-                list.add("نام: $name | شرکت: $company | شماره: $phone")
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
-    fun getAllContactsRaw(): List<Array<String>> {
-        val list = ArrayList<Array<String>>()
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT name, company, phone FROM contacts ORDER BY id DESC", null)
-        if (cursor.moveToFirst()) {
-            do {
-                list.add(
-                    arrayOf(
-                        cursor.getString(0) ?: "",
-                        cursor.getString(1) ?: "",
-                        cursor.getString(2) ?: ""
-                    )
-                )
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-}
-rsor.getString(0)
                 val company = cursor.getString(1).ifEmpty { "بدون شرکت" }
                 val phone = cursor.getString(2)
                 list.add("نام: $name | شرکت: $company | شماره: $phone")
