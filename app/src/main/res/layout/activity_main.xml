@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layoutDirection="rtl">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="متن پیامک پیش‌فرض (از {name} برای متغیر نام استفاده کنید):"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/etTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minLines="3"
+        android:gravity="top|right"
+        android:hint="مثال: سلام {name} عزیز، کاتالوگ محصولات برای شما ارسال شد."
+        android:background="@android:drawable/edit_text"
+        android:layout_marginTop="6dp" />
+
+    <Button
+        android:id="@+id/btnSaveTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ذخیره متن پیش‌فرض"
+        android:layout_marginTop="4dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        android:layout_marginVertical="12dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="انتخاب سیم‌کارت ارسال‌کننده:"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+    <RadioGroup
+        android:id="@+id/rgSim"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+
+        <RadioButton
+            android:id="@+id/rbSim1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="سیم‌کارت ۱"
+            android:checked="true"
+            android:layout_marginLeft="24dp" />
+
+        <RadioButton
+            android:id="@+id/rbSim2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="سیم‌کارت ۲" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:hint="شماره موبایل (مثال: 09123456789)"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnNextStep"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="مرحله بعد (ورود نام و ارسال پیامک)"
+        android:layout_marginTop="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="لیست ثبت‌شده در دیتابیس:"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnExportCsv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="خروجی اکسل (CSV)" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lvContacts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp" />
+
+</LinearLayout>
