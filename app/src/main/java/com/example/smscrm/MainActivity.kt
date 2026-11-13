@@ -18,6 +18,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,7 +46,8 @@ class MainActivity : AppCompatActivity() {
         lvContacts = findViewById(R.id.lvContacts)
 
         val btnSaveTemplate = findViewById<Button>(R.id.btnSaveTemplate)
-        val btnNextStep = findViewById<Button>(R.id.btnNextStep)
+        val btnSendSmsMain = findViewById<Button>(R.id.btnSendSms)
+        val btnSendWaMain = findViewById<Button>(R.id.btnSendWhatsApp)
         val btnExportCsv = findViewById<Button>(R.id.btnExportCsv)
 
         val prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
@@ -64,20 +66,18 @@ class MainActivity : AppCompatActivity() {
         lvContacts.adapter = adapter
         loadContactsFromDb()
 
-        btnNextStep.setOnClickListener {
-            val phone = etPhone.text.toString().trim()
-            val template = etTemplate.text.toString().trim()
-
-            if (phone.isEmpty()) {
-                etPhone.error = "شماره موبایل را وارد کنید"
-                return@setOnClickListener
+        // دکمه کلیک برای ارسال پیامک
+        btnSendSmsMain.setOnClickListener {
+            validateAndProceed { phone, template ->
+                showStepTwoDialog(phone, template, isWhatsApp = false)
             }
-            if (!template.contains("{name}")) {
-                Toast.makeText(this, "لطفاً متغیر {name} را در متن پیامک قرار دهید", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
+        }
 
-            showStepTwoDialog(phone, template)
+        // دکمه کلیک برای ارسال واتساپ
+        btnSendWaMain.setOnClickListener {
+            validateAndProceed { phone, template ->
+                showStepTwoDialog(phone, template, isWhatsApp = true)
+            }
         }
 
         btnExportCsv.setOnClickListener {
@@ -91,7 +91,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showStepTwoDialog(phone: String, template: String) {
+    private fun validateAndProceed(action: (String, String) -> Unit) {
+        val phone = etPhone.text.toString().trim()
+        val template = etTemplate.text.toString().trim()
+
+        if (phone.isEmpty()) {
+            etPhone.error = "شماره موبایل را وارد کنید"
+            return
+        }
+        if (!template.contains("{name}")) {
+            Toast.makeText(this, "لطفاً متغیر {name} را در متن قرار دهید", Toast.LENGTH_LONG).show()
+            return
+        }
+        action(phone, template)
+    }
+
+    private fun showStepTwoDialog(phone: String, template: String, isWhatsApp: Boolean) {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(50, 40, 50, 10)
@@ -99,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val etName = EditText(this).apply {
-            hint = "نام مخاطب (جایگذاری در پیامک و ذخیره)"
+            hint = "نام مخاطب (جایگذاری در متن و ذخیره)"
         }
         val etCompany = EditText(this).apply {
             hint = "نام شرکت (فقط ذخیره در دیتابیس)"
@@ -108,10 +123,12 @@ class MainActivity : AppCompatActivity() {
         layout.addView(etName)
         layout.addView(etCompany)
 
+        val titleAction = if (isWhatsApp) "ارسال واتساپ" else "ارسال پیامک"
+
         AlertDialog.Builder(this)
-            .setTitle("تکمیل اطلاعات برای $phone")
+            .setTitle("$titleAction برای $phone")
             .setView(layout)
-            .setPositiveButton("ارسال و ذخیره") { _, _ ->
+            .setPositiveButton("تایید و ثبت") { _, _ ->
                 val name = etName.text.toString().trim()
                 val company = etCompany.text.toString().trim()
 
@@ -121,15 +138,41 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val finalMessage = template.replace("{name}", name)
-                val selectedSimSlot = if (rgSim.checkedRadioButtonId == R.id.rbSim2) 1 else 0
 
-                sendSmsWithSim(phone, finalMessage, selectedSimSlot)
+                if (isWhatsApp) {
+                    sendViaWhatsApp(phone, finalMessage)
+                } else {
+                    val selectedSimSlot = if (rgSim.checkedRadioButtonId == R.id.rbSim2) 1 else 0
+                    sendSmsWithSim(phone, finalMessage, selectedSimSlot)
+                }
+
                 dbHelper.insertContact(name, company, phone)
                 loadContactsFromDb()
                 etPhone.text.clear()
             }
             .setNegativeButton("انصراف", null)
             .show()
+    }
+
+    private fun sendViaWhatsApp(phone: String, message: String) {
+        try {
+            // اصلاح شماره برای واتساپ (تبدیل 09 به کد بین‌المللی 98+)
+            var formattedPhone = phone
+            if (formattedPhone.startsWith("0")) {
+                formattedPhone = "+98" + formattedPhone.substring(1)
+            }
+
+            val encodedMessage = URLEncoder.encode(message, "UTF-8")
+            val url = "https://api.whatsapp.com/send?phone=$formattedPhone&text=$encodedMessage"
+            
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(url)
+            }
+            startActivity(intent)
+            Toast.makeText(this, "اطلاعات ذخیره و واتساپ باز شد", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "واتساپ روی دستگاه نصب نیست یا خطایی رخ داد", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun sendSmsWithSim(phone: String, message: String, simSlotIndex: Int) {
@@ -161,9 +204,7 @@ class MainActivity : AppCompatActivity() {
 
             val parts = smsManager.divideMessage(message)
             smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
-            Toast.makeText(this, "پیامک با موفقیت ارسال و در دیتابیس ثبت شد", Toast.LENGTH_SHORT).show()
-        } catch (e: SecurityException) {
-            Toast.makeText(this, "دسترسی سیم‌کارت یا پیامک داده نشده است", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "پیامک ارسال و در دیتابیس ثبت شد", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "خطا در ارسال پیامک: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -195,7 +236,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 writer.flush()
             }
-            Toast.makeText(this, "فایل اکسل (CSV) با موفقیت ذخیره شد", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "فایل اکسل با موفقیت ذخیره شد", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "خطا در ذخیره فایل: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -258,6 +299,35 @@ class ContactDbHelper(context: Context) : SQLiteOpenHelper(context, "SmsCrm.db",
         if (cursor.moveToFirst()) {
             do {
                 val name = cursor.getString(0)
+                val company = cursor.getString(1).ifEmpty { "بدون شرکت" }
+                val phone = cursor.getString(2)
+                list.add("نام: $name | شرکت: $company | شماره: $phone")
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return list
+    }
+
+    fun getAllContactsRaw(): List<Array<String>> {
+        val list = ArrayList<Array<String>>()
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT name, company, phone FROM contacts ORDER BY id DESC", null)
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(
+                    arrayOf(
+                        cursor.getString(0) ?: "",
+                        cursor.getString(1) ?: "",
+                        cursor.getString(2) ?: ""
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return list
+    }
+}
+rsor.getString(0)
                 val company = cursor.getString(1).ifEmpty { "بدون شرکت" }
                 val phone = cursor.getString(2)
                 list.add("نام: $name | شرکت: $company | شماره: $phone")
